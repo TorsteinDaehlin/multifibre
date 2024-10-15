@@ -33,47 +33,49 @@ function [f_forceEquilibrium_FtildeState_all_tendon,f_FiberLength_TendonForce_te
 
 import casadi.*
 N_muscles = model_info.muscle_info.NMuscle;
+M_fibres = S.multifibre.MFibres; % Add this to muscle info structure. May be most sensible to transfer it from S.
 
 
 
 %% Muscle contraction dynamics
 % Function for Hill-equilibrium
-FTtilde     = SX.sym('FTtilde',N_muscles); % Normalized tendon forces
-a           = SX.sym('a',N_muscles); % Muscle activations
-dFTtilde    = SX.sym('dFTtilde',N_muscles); % Time derivative tendon forces
-lMT         = SX.sym('lMT',N_muscles); % Muscle-tendon lengths
-vMT         = SX.sym('vMT',N_muscles); % Muscle-tendon velocities
-tension_SX  = SX.sym('tension',N_muscles); % Tensions
+FTtilde     = SX.sym('FTtilde', N_muscles); % Normalized tendon forces
+a           = SX.sym('a', N_muscles, M_fibres); % Muscle activations
+dFTtilde    = SX.sym('dFTtilde', N_muscles); % Time derivative tendon forces
+lMT         = SX.sym('lMT', N_muscles); % Muscle-tendon lengths
+vMT         = SX.sym('vMT', N_muscles); % Muscle-tendon velocities
+tension_SX  = SX.sym('tension', N_muscles); % Tensions
 % atendon_SX  = SX.sym('atendon',NMuscle); % Tendon stiffness
 % shift_SX    = SX.sym('shift',NMuscle); % shift curve
-Hilldiff    = SX(N_muscles,1); % Hill-equilibrium
-FT          = SX(N_muscles,1); % Tendon forces
-Fce         = SX(N_muscles,1); % Contractile element forces
-Fiso        = SX(N_muscles,1); % Normalized forces from force-length curve
-vMmax       = SX(N_muscles,1); % Maximum contraction velocities
-massM       = SX(N_muscles,1); % Muscle mass
-Fpass       = SX(N_muscles,1); % Passive element forces
+Hilldiff    = SX(N_muscles, 1); % Hill-equilibrium
+FT          = SX(N_muscles, 1); % Tendon forces
+Fce         = SX(N_muscles, 1); % Contractile element forces
+Fiso        = SX(N_muscles, 1); % Normalized forces from force-length curve
+vMmax       = SX(N_muscles, M_fibres); % Maximum contraction velocities
+massM       = SX(N_muscles, 1); % Muscle mass
+Fpass       = SX(N_muscles, 1); % Passive element forces
 % Parameters of force-length-velocity curves
 
 % load(fullfile(MainPath,'MuscleModel','Fvparam.mat'),'Fvparam');
 % load(fullfile(MainPath,'MuscleModel','Fpparam.mat'),'Fpparam');
 % load(fullfile(MainPath,'MuscleModel','Faparam.mat'),'Faparam');
-load('Fvparam.mat','Fvparam');
-load('Fpparam.mat','Fpparam');
-load('Faparam.mat','Faparam');
+load('Fvparam.mat', 'Fvparam');
+load('Fpparam.mat', 'Fpparam');
+load('Faparam.mat', 'Faparam');
 
 % Parameters of force-length-velocity curves
 for m = 1:N_muscles
-    [Hilldiff(m),FT(m),Fce(m),Fpass(m),Fiso(m),vMmax(m),massM(m)] = ...
-        ForceEquilibrium_FtildeState_all_tendon(a(m),FTtilde(m),...
-        dFTtilde(m),lMT(m),vMT(m),model_info.muscle_info.parameters(m).FMo,...
-        model_info.muscle_info.parameters(m).lMo,model_info.muscle_info.parameters(m).lTs,...
-        model_info.muscle_info.parameters(m).alphao,model_info.muscle_info.parameters(m).vMmax,...
-        Fvparam,Fpparam,Faparam,tension_SX(m),model_info.muscle_info.parameters(m).tendon_stiff,...
-        model_info.muscle_info.parameters(m).tendon_stiff_shift,S.misc.constant_pennation_angle,...
-        S.misc.dampingCoefficient,model_info.muscle_info.parameters(m).muscle_pass_stiff_shift,...
-        model_info.muscle_info.parameters(m).muscle_pass_stiff_scale,...
-        model_info.muscle_info.parameters(m).muscle_strength);
+    [Hilldiff(m), FT(m), Fce(m), Fpass(m), Fiso(m), vMmax(m), massM(m)] = ...
+        ForceEquilibrium_FtildeState_all_tendon_multifibre(a(m, :), FTtilde(m), ...
+        dFTtilde(m), lMT(m), vMT(m), model_info.muscle_info.parameters(m).FMo, ...
+        model_info.muscle_info.parameters(m).lMo, model_info.muscle_info.parameters(m).lTs, ...
+        model_info.muscle_info.parameters(m).alphao, model_info.muscle_info.parameters(m, :).vMmax, ...
+        Fvparam, Fpparam, Faparam, tension_SX(m), model_info.muscle_info.parameters(m).tendon_stiff, ...
+        model_info.muscle_info.parameters(m).tendon_stiff_shift, S.misc.constant_pennation_angle, ...
+        S.misc.dampingCoefficient, model_info.muscle_info.parameters(m).muscle_pass_stiff_shift, ...
+        model_info.muscle_info.parameters(m).muscle_pass_stiff_scale, ...
+        model_info.muscle_info.parameters(m).muscle_strength, ...
+        model_info.muslce_info.parameters(m).slow_twitch_fiber_ratio);
 end
 f_forceEquilibrium_FtildeState_all_tendon = ...
     Function('f_forceEquilibrium_FtildeState_all_tendon',{a,FTtilde,...
