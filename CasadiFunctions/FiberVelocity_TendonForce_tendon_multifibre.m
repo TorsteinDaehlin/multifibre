@@ -1,5 +1,5 @@
-function [vM,vMtilde,varargout] = FiberVelocity_TendonForce_tendon(FTtile,...
-    dFTtilde,lMo_in,lTs_in,alphao_in,vMmax_in,lMT,vMT,Atendon,shift,MuscMoAsmp)
+function [vM,vMtilde,varargout] = FiberVelocity_TendonForce_tendon_multifibre(FTtile,...
+    dFTtilde,lMo_in,lTs_in,alphao_in,vMmax_in,lMT,vMT,Atendon,shift,MuscMoAsmp,n_fibre)
 % --------------------------------------------------------------------------
 % FiberVelocity_TendonForce_tendon
 %    This function computes muscle fiber velocities from muscle-tendon forces.
@@ -21,7 +21,9 @@ function [vM,vMtilde,varargout] = FiberVelocity_TendonForce_tendon(FTtile,...
 lMo = ones(size(FTtile,1),1)*lMo_in;
 lTs = ones(size(FTtile,1),1)*lTs_in;
 alphao = ones(size(FTtile,1),1)*alphao_in;
-vMmax = ones(size(FTtile, 1), 1) * vMmax_in;
+for i = 1:n_fibre
+    vMmax(:, i) = ones(size(FTtile, 1), 1) * vMmax_in(i);
+end
 
 % Inverse tendon force-length characteristic
 lTtilde = log(5*(FTtile + 0.25 - shift))./Atendon + 0.995;

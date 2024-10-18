@@ -44,6 +44,9 @@ S.misc.poly_order = [];
 % empty array of orthoses
 S.orthosis.settings = {};
 
+% Multifibre setting
+S.multifibre.use_multifibre_muscles = false;
+
 % save the git hash
 [S.misc.git.local_hash,S.misc.git.branch_name, S.misc.git.remote_hash] = get_git_hash(pathRepo);
 

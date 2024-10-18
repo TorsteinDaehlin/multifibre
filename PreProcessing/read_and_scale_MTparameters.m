@@ -48,9 +48,15 @@ function [model_info] = read_and_scale_MTparameters(S,osim_path,model_info)
 muscle_info = model_info.muscle_info;
 muscleNames = muscle_info.muscle_names;
 NMuscle = muscle_info.NMuscle;
+if S.multifibre.use_multifibre_muscles
+    NFibres = S.multifibre.NFibres; 
+end
 
 %% read default muscle- and tendon parameters from opensim model file
 [FMo, lMo, lTs, alphao, vMmax] = getMTparameters(osim_path,muscleNames);
+if S.multifibre.use_multifibre_muscles
+    vMmax = repmat(linspace(S.multifibre.vMmax_range(1), S.multifibre.vMmax_range(end), NFibres)', 1, NMuscle) .* lMo;
+end
 
 %% parameters not from osim file
 % default tendon stiffness
@@ -111,7 +117,12 @@ end
 model_info.muscle_info = muscle_info;
 
 % Time constants of excitation-activation dynamics are fixed.
-model_info.muscle_info.tact = 0.015; % activation
-model_info.muscle_info.tdeact = 0.06; % deactivation
+if S.multifibre.use_multifibre_muscles
+    model_info.muscle_info.tact = fliplr(linspace(S.multifibre.tact_range(1), S.multifibre.tact_range(end), NFibres)); % activation - slow to fast
+    model_info.muscle_info.tdeact = model_info.muscle_info.tact ./ S.multifibre.tdeact_beta; % deactivation
+else
+    model_info.muscle_info.tact = 0.015; % activation
+    model_info.muscle_info.tdeact = 0.06; % deactivation
+end
 
 end

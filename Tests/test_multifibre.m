@@ -56,7 +56,7 @@ f_ForceEquilibrium_FtildeState_all_tendon_multifibre = ...
     {'a', 'FTtilde', 'dFTtilde', 'lMT', 'vMT', 'tension_SX'}, ...
     {'Hilldiff', 'FT', 'Fce', 'Fpass', 'Fiso', 'vMmax', 'massM'});
 
-% Define experiment and integrate over time
+
 
 
 end
