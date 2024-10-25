@@ -32,7 +32,6 @@ Atendonsc = aTendon;
 Atendon = ones(size(a, 1), 1) * Atendonsc;
 volM = FMo .* lMo;
 massM = volM .* (1059.7) ./ (tension * 1e6);
-per_fibre(2) = 1 - per_fibre;
 
 % Parameters by fibre
 for i = 1:n_fibre

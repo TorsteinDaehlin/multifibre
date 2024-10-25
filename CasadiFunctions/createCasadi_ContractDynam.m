@@ -27,43 +27,36 @@ function [f_forceEquilibrium_FtildeState_all_tendon,f_FiberLength_TendonForce_te
 % Original author: Ines Vandekerckhove, Tom Buurke & Dhruv Gupta, KU Leuven
 % Original date: 30-11-2021
 %
-% Last edit by:
-% Last edit date:
+% Last edit by: Torstein Daehlin
+% Last edit date: 22-10-2024
 % --------------------------------------------------------------------------
 
 import casadi.*
 N_muscles = model_info.muscle_info.NMuscle;
 if S.multifibre.use_multifibre_muscles
-    N_fibres = S.multifibre.NFibres; 
+    N_fibres = S.multifibre.NFibres;
+else
+    N_fibres = 1;
 end
 
 
 %% Muscle contraction dynamics
 % Function for Hill-equilibrium
 FTtilde     = SX.sym('FTtilde', N_muscles); % Normalized tendon forces
-
+a           = SX.sym('a', N_muscles, N_fibres); % Muscle activations
 dFTtilde    = SX.sym('dFTtilde', N_muscles); % Time derivative tendon forces
 lMT         = SX.sym('lMT', N_muscles); % Muscle-tendon lengths
 vMT         = SX.sym('vMT', N_muscles); % Muscle-tendon velocities
 tension_SX  = SX.sym('tension', N_muscles); % Tensions
-if S.multifibre.use_multifibre_muscles
-    a       = SX.sym('a', N_muscles, N_fibres); % Muscle activations
-else
-    a       = SX.sym('a', N_muscles); % Muscle activations
-end
 % atendon_SX  = SX.sym('atendon',NMuscle); % Tendon stiffness
 % shift_SX    = SX.sym('shift',NMuscle); % shift curve
 Hilldiff    = SX(N_muscles, 1); % Hill-equilibrium
 FT          = SX(N_muscles, 1); % Tendon forces
 Fce         = SX(N_muscles, 1); % Contractile element forces
 Fiso        = SX(N_muscles, 1); % Normalized forces from force-length curve
+vMmax       = SX(N_muscles, N_fibres); % Maximum contraction velocities
 massM       = SX(N_muscles, 1); % Muscle mass
 Fpass       = SX(N_muscles, 1); % Passive element forces
-if S.multifibre.use_multifibre_muscles
-    vMmax   = SX(N_muscles, N_fibres); % Maximum contraction velocities
-else
-    vMmax   = SX(N_muscles); % Maximum contraction velocities
-end
 % Parameters of force-length-velocity curves
 
 % load(fullfile(MainPath,'MuscleModel','Fvparam.mat'),'Fvparam');
@@ -86,14 +79,9 @@ if S.multifibre.use_multifibre_muscles
             S.misc.dampingCoefficient, model_info.muscle_info.parameters(m).muscle_pass_stiff_shift, ...
             model_info.muscle_info.parameters(m).muscle_pass_stiff_scale, ...
             model_info.muscle_info.parameters(m).muscle_strength, ...
-            model_info.muscle_info.parameters(m).slow_twitch_fiber_ratio, ...
+            model_info.muscle_info.parameters(m).per_fibre, ...
             N_fibres);
     end
-    f_forceEquilibrium_FtildeState_all_tendon = ...
-        Function('f_forceEquilibrium_FtildeState_all_tendon',{a,FTtilde,...
-        dFTtilde,lMT,vMT,tension_SX},{Hilldiff,FT,Fce,Fpass,Fiso,vMmax,massM},...
-        {'a','FTtilde','dFTtilde','lMT','vMT','tension_SX'},...
-        {'Hilldiff','FT','Fce','Fpass','Fiso','vMmax','massM'});
 else
     for m = 1:N_muscles
         [Hilldiff(m), FT(m), Fce(m), Fpass(m), Fiso(m), vMmax(m), massM(m)] = ...
@@ -107,12 +95,12 @@ else
             model_info.muscle_info.parameters(m).muscle_pass_stiff_scale, ...
             model_info.muscle_info.parameters(m).muscle_strength);
     end
-    f_forceEquilibrium_FtildeState_all_tendon = ...
-        Function('f_forceEquilibrium_FtildeState_all_tendon',{a,FTtilde,...
-        dFTtilde,lMT,vMT,tension_SX},{Hilldiff,FT,Fce,Fpass,Fiso,vMmax,massM},...
-        {'a','FTtilde','dFTtilde','lMT','vMT','tension_SX'},...
-        {'Hilldiff','FT','Fce','Fpass','Fiso','vMmax','massM'});
 end
+f_forceEquilibrium_FtildeState_all_tendon = ...
+    Function('f_forceEquilibrium_FtildeState_all_tendon',{a,FTtilde,...
+    dFTtilde,lMT,vMT,tension_SX},{Hilldiff,FT,Fce,Fpass,Fiso,vMmax,massM},...
+    {'a','FTtilde','dFTtilde','lMT','vMT','tension_SX'},...
+    {'Hilldiff','FT','Fce','Fpass','Fiso','vMmax','massM'});
 
 % Function to get (normalized) muscle fiber lengths
 lM      = SX(N_muscles,1);
@@ -133,9 +121,9 @@ f_FiberLength_TendonForce_tendon = Function(...
 % Function to get (normalized) muscle fiber velocities
 vM      = SX(N_muscles,1);
 vT      = SX(N_muscles,1);
+vMtilde = SX(N_muscles,N_fibres);
 
 if S.multifibre.use_multifibre_muscles
-    vMtilde = SX(N_muscles,N_fibres);
     for m = 1:N_muscles
         [vM(m),vMtilde(m,:),vT(m)] = FiberVelocity_TendonForce_tendon_multifibre(FTtilde(m),...
             dFTtilde(m),model_info.muscle_info.parameters(m).lMo,model_info.muscle_info.parameters(m).lTs,...
@@ -144,11 +132,7 @@ if S.multifibre.use_multifibre_muscles
             model_info.muscle_info.parameters(m).tendon_stiff_shift,...
             S.misc.constant_pennation_angle,N_fibres);
     end
-    f_FiberVelocity_TendonForce_tendon = Function(...
-        'f_FiberVelocity_Ftilde_tendon',{FTtilde,dFTtilde,lMT,vMT},...
-        {vM,vMtilde},{'FTtilde','dFTtilde','lMT','vMT'},{'vM','vMtilde'});
 else
-    vMtilde = SX(N_muscles,N_fibres);
     for m = 1:N_muscles
         [vM(m),vMtilde(m),vT(m)] = FiberVelocity_TendonForce_tendon(FTtilde(m),...
             dFTtilde(m),model_info.muscle_info.parameters(m).lMo,model_info.muscle_info.parameters(m).lTs,...
@@ -157,10 +141,10 @@ else
             model_info.muscle_info.parameters(m).tendon_stiff_shift,...
             S.misc.constant_pennation_angle);
     end
-    f_FiberVelocity_TendonForce_tendon = Function(...
-        'f_FiberVelocity_Ftilde_tendon',{FTtilde,dFTtilde,lMT,vMT},...
-        {vM,vMtilde},{'FTtilde','dFTtilde','lMT','vMT'},{'vM','vMtilde'});
 end
+f_FiberVelocity_TendonForce_tendon = Function(...
+    'f_FiberVelocity_Ftilde_tendon',{FTtilde,dFTtilde,lMT,vMT},...
+    {vM,vMtilde},{'FTtilde','dFTtilde','lMT','vMT'},{'vM','vMtilde'});
 
 f_lT_vT = Function('f_lT_vT',{FTtilde,dFTtilde,lMT,vMT},...
     {lT,vT},{'FTtilde','dFTtilde','lMT','vMT'},{'lT','vT'});

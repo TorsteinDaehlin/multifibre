@@ -63,6 +63,11 @@ muscleNames = model_info.muscle_info.muscle_names;
 
 % Total number of muscles
 NMuscle = model_info.muscle_info.NMuscle;
+if S.multifibre.use_multifibre_muscles
+    NFibre = S.multifibre.NFibres;
+else
+    NFibre = 1;
+end
 [~,mai] = MomentArmIndices_asym(muscleNames,...
     model_info.muscle_info.muscle_spanning_joint_info);
 % calculate total number of joints that each muscle crosses (used later)

@@ -23,6 +23,10 @@ function [model_info] = read_and_scale_MTparameters(S,osim_path,model_info)
 %       - muscle_stiffness: positioning of passive force-length curve of a
 %       muscle w.r.t. its normalized fiber length. Default value is 1, can
 %       be changed to the value specified in "S.subject.muscle_stiff".
+%       - per_fibre: percent slow vs. fast muscle fibres. If the number of
+%       fibres == 2, the data from Uchida et al. (2016) is used. However,
+%       for number of fibres > 2, the equation provided by Potvind &
+%       Fuglevand, 2017 is used to calculate motor unit distribution.
 %
 % INPUT:
 %   - S -
@@ -75,6 +79,15 @@ muscle_strength = ones(1,NMuscle);
 muscle_pass_stiff_shift = ones(1,NMuscle);
 muscle_pass_stiff_scale = ones(1,NMuscle);
 
+% Add per_fibre variables if multifibre is used
+if S.multifibre.use_multifibre_muscles
+    if NFibres == 2
+        per_fibre = [slow_twitch_fiber_ratio', 1 - slow_twitch_fiber_ratio'];
+    else
+        tmp_per_fibre = exp((log(S.multifibre.RP)*(1:NFibres)-1)/(NFibres-1)); % From Potvind & Fuglevand, 2017
+        per_fibre = repmat((tmp_per_fibre/sum(tmp_per_fibre))',[1,NMuscle]); % percentage slow vs. fast fibres for each muscle
+    end
+end
 
 
 %% Organise in struct
@@ -95,6 +108,9 @@ end
 [parameters] = double_array_to_struct_array(parameters,'muscle_pass_stiff_shift',muscle_pass_stiff_shift);
 [parameters] = double_array_to_struct_array(parameters,'muscle_pass_stiff_scale',muscle_pass_stiff_scale);
 [parameters] = double_array_to_struct_array(parameters,'muscle_mass',[]);
+if S.multifibre.use_multifibre_muscles
+    [parameters] = double_array_to_struct_array(parameters,'per_fibre', per_fibre);
+end
 
 muscle_info.parameters = parameters;
 
