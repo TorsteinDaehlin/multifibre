@@ -30,12 +30,12 @@ S.solver.IG_selection = fullfile(S.misc.main_path,'OCP','IK_Guess_Full_GC.mot');
 S.solver.IG_selection_gaitCyclePercent = 100;
 % S.solver.IG_selection = 'quasi-random';
 
-% Set options for multifibre model
+% Set options for multi motor unit (MMU) muscle model
 S.multifibre.use_multifibre_muscles = true;
-S.multifibre.NFibres = 2;
+S.multifibre.NFibre = 2;
 S.multifibre.vMmax_range = [5 10]; % Range of max contraction velocities as multiple of optimal fibre lengths
 S.multifibre.tact_range = [0.01 0.02]; % Range of activation time constants 
-S.multifibre.tdeact_beta = 0.6; % deactivation time constants are given by tact * (1 / beta).
+S.multifibre.beta = 0.6; % deactivation time constants are given by tact * (1 / beta).
 
 % give the path to the osim model of your subject
 osim_path = fullfile(pathRepo,'Subjects',S.subject.name,[S.subject.name '.osim']);

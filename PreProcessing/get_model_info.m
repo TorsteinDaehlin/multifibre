@@ -137,6 +137,4 @@ model_info.muscle_info.idx_right = idx_mus_r;
 %% add osim_path so it will be included in saved results
 model_info.osim_path = osim_path;
 
-
-
 end % end of function

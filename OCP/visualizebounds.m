@@ -53,8 +53,9 @@ end
 s = sgtitle('Time derivative of Qdots');
 set(s,'Fontsize',title_Fontsize)
 figure()
-for i = 1:NMuscle
-    subplot(10,10,i)
+for i = 1:NMuscle*NFibre
+    plot_rowcol = ceil(sqrt(NMuscle*NFibre));
+    subplot(plot_rowcol,plot_rowcol,i)
     plot([1,N],[bounds.a.upper(:,i),bounds.a.upper(:,i)],...
         'b--','linewidth',2);
     hold on
@@ -65,8 +66,9 @@ end
 s = sgtitle('Muscle activations');
 set(s,'Fontsize',title_Fontsize)
 figure()
-for i = 1:NMuscle
-    subplot(10,10,i)
+for i = 1:NMuscle*NFibre
+    plot_rowcol = ceil(sqrt(NMuscle*NFibre));
+    subplot(plot_rowcol,plot_rowcol,i)
     plot([1,N],[bounds.vA.upper(:,i),bounds.vA.upper(:,i)],...
         'b--','linewidth',2);
     hold on

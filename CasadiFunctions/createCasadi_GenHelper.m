@@ -24,6 +24,7 @@ function [f_casadi] = createCasadi_GenHelper(S,model_info)
 import casadi.*
 
 N_muscles = model_info.muscle_info.NMuscle;
+N_fibres = S.multifibre.NFibre;
 N_arms_dof = model_info.ExtFunIO.jointi.nq.arms;
 N_noarms_dof = model_info.ExtFunIO.jointi.nq.noArms;
 N_torq_act = model_info.ExtFunIO.jointi.nq.torqAct;
@@ -84,6 +85,15 @@ end
 J_temp_N_muscles = J_temp_N_muscles/N_muscles;
 f_casadi.J_muscles = Function('f_J_muscles',{e_temp_N_muscles},{J_temp_N_muscles});
 
+% Function for all activations
+e_temp_N_act = SX.sym('e_temp_N_act',N_muscles*N_fibres);
+J_temp_N_act = 0;
+for i=1:length(e_temp_N_act)
+    J_temp_N_act = J_temp_N_act + e_temp_N_act(i).^2;
+end
+J_temp_N_act = J_temp_N_act/(N_muscles*N_fibres);
+f_casadi.J_act = Function('f_J_act',{e_temp_N_act},{J_temp_N_act});
+
 %% Sum of squared values (non-normalized)
 % Function for for distance between 2 points (in a certain plane)
 e_temp_2 = SX.sym('e_temp_2',2);
@@ -112,6 +122,16 @@ for i=1:length(e_temp_N_muscles_exp)
 end
 J_temp_N_muscles_exp = J_temp_N_muscles_exp/N_muscles;
 f_casadi.J_muscles_exp = Function('f_J_N_muscles_exp',{e_temp_N_muscles_exp,expo},{J_temp_N_muscles_exp});
+
+% Function for number of muscles activations
+e_temp_N_act_exp  = SX.sym('e_temp_N_act_exp',N_muscles*N_fibres);
+expo        = SX.sym('exp',1);
+J_temp_N_act_exp = 0;
+for i=1:length(e_temp_N_muscles_exp)
+    J_temp_N_act_exp = J_temp_N_act_exp + e_temp_N_act_exp(i).^expo;
+end
+J_temp_N_act_exp = J_temp_N_act_exp/(N_muscles*N_fibres);
+f_casadi.J_act_exp = Function('f_J_N_act_exp',{e_temp_N_act_exp,expo},{J_temp_N_act_exp});
 
 %% Sum of products
 % Function for number of muscles crossing a joint

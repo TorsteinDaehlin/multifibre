@@ -712,5 +712,32 @@ if ~isfield(S.OpenSimADOptions,'verify_ID')
     S.OpenSimADOptions.verify_ID = false;
 end 
 
+%% Multifibre options
+% Is a multifibre muscle model used?
+if ~isfield(S.multifibre,'use_multifibre_muscles')
+    S.multifibre.use_multifibre_muscles = false;
+end
+
+% Number of muscle fibres
+if ~isfield(S.multifibre,'NFibres') && S.multifibre.use_multifibre_muscles
+    S.multifibre.NFibre = 2;
+elseif ~S.multifibre.use_multifibre_muscles
+    S.multifibre.NFibre = 1;
+end
+
+% Constant scaling deactivation time constants and muscle velocity
+if ~isfield(S.multifibre,'beta') && S.multifibre.use_multifibre_muscles
+    S.multifibre.beta = 0.6;
+end
+
+% Range of activation time constants
+if ~isfield(S.multifibre,'tact_range') && S.multifibre.use_multifibre_muscles
+    S.multifibre.tact_range = [0.01 0.02];
+end
+
+% Range of maximal muscle velocities
+if ~isfield(S.multifibre,'vMmax_range') && S.multifibre.use_multifibre_muscles
+    S.multifibre.vMmax_range = [6, (6 / S.multifibre.beta)];
+end
 
 end

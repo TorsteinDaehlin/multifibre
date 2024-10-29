@@ -34,6 +34,7 @@ function guess = getGuess_DI_opti(S,model_info,scaling,d)
 N = S.solver.N_meshes; % number of mesh intervals
 nq = model_info.ExtFunIO.jointi.nq;
 NMuscle = model_info.muscle_info.NMuscle;
+NFibre = S.multifibre.NFibre;
 coordinate_names = model_info.ExtFunIO.coord_names.all;
 
 %%
@@ -95,8 +96,8 @@ guess.Qdots = interp1(round(Qs_time,4),guess.Qdots_all,round(interval,4));
 guess.Qdotdots = interp1(round(Qs_time,4),guess.Qdotdots_all,round(interval,4));
 
 %% Muscle variables
-guess.a = 0.1*ones(N,NMuscle);
-guess.vA = 0.01*ones(N,NMuscle);
+guess.a = 0.1*ones(N,NMuscle*NFibre);
+guess.vA = 0.01*ones(N,NMuscle*NFibre);
 guess.FTtilde = 0.1*ones(N,NMuscle);
 guess.dFTtilde = 0.01*ones(N,NMuscle);
 guess.SynH = S.subject.SynH_guess*ones(N+1,NMuscle);
@@ -131,7 +132,12 @@ if strcmp(S.misc.gaitmotion_type,'HalfGaitCycle')
     
     guess.Qs = [guess.Qs; inv_X_Qs];
     guess.Qdots = [guess.Qdots; inv_X_Qdots];
-    guess.a = [guess.a; guess.a(1,model_info.ExtFunIO.symQs.MusInvB)];
+    if S.multifibre.use_multifibre_muscles
+        tmp = reshape(guess.a(1,:), NFibre, []);
+        guess.a = [guess.a; reshape(tmp(:,model_info.ExtFunIO.symQs.MusInvB),1,[])];
+    else
+        guess.a = [guess.a; guess.a(1,model_info.ExtFunIO.symQs.MusInvB)];
+    end
     guess.FTtilde = [guess.FTtilde; guess.FTtilde(1,model_info.ExtFunIO.symQs.MusInvB)];
     guess.a_a = [guess.a_a; guess.a_a(1,:)];
 else
@@ -177,7 +183,7 @@ guess.dFTtilde  = (guess.dFTtilde)./repmat(scaling.dFTtilde,N,...
 
 
 %% Collocation points
-guess.a_col = zeros(d*N,NMuscle);
+guess.a_col = zeros(d*N,NMuscle*NFibre);
 guess.FTtilde_col = zeros(d*N,NMuscle);
 guess.Qs_col = zeros(d*N,nq.all);
 guess.Qdots_col = zeros(d*N,nq.all);

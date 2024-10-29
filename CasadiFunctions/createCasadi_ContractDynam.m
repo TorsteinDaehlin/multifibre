@@ -33,17 +33,12 @@ function [f_forceEquilibrium_FtildeState_all_tendon,f_FiberLength_TendonForce_te
 
 import casadi.*
 N_muscles = model_info.muscle_info.NMuscle;
-if S.multifibre.use_multifibre_muscles
-    N_fibres = S.multifibre.NFibres;
-else
-    N_fibres = 1;
-end
-
+N_fibre = S.multifibre.NFibre;
 
 %% Muscle contraction dynamics
 % Function for Hill-equilibrium
 FTtilde     = SX.sym('FTtilde', N_muscles); % Normalized tendon forces
-a           = SX.sym('a', N_muscles, N_fibres); % Muscle activations
+a           = SX.sym('a', N_muscles, N_fibre); % Muscle activations
 dFTtilde    = SX.sym('dFTtilde', N_muscles); % Time derivative tendon forces
 lMT         = SX.sym('lMT', N_muscles); % Muscle-tendon lengths
 vMT         = SX.sym('vMT', N_muscles); % Muscle-tendon velocities
@@ -54,7 +49,7 @@ Hilldiff    = SX(N_muscles, 1); % Hill-equilibrium
 FT          = SX(N_muscles, 1); % Tendon forces
 Fce         = SX(N_muscles, 1); % Contractile element forces
 Fiso        = SX(N_muscles, 1); % Normalized forces from force-length curve
-vMmax       = SX(N_muscles, N_fibres); % Maximum contraction velocities
+vMmax       = SX(N_muscles, N_fibre); % Maximum contraction velocities
 massM       = SX(N_muscles, 1); % Muscle mass
 Fpass       = SX(N_muscles, 1); % Passive element forces
 % Parameters of force-length-velocity curves
@@ -80,7 +75,7 @@ if S.multifibre.use_multifibre_muscles
             model_info.muscle_info.parameters(m).muscle_pass_stiff_scale, ...
             model_info.muscle_info.parameters(m).muscle_strength, ...
             model_info.muscle_info.parameters(m).per_fibre, ...
-            N_fibres);
+            N_fibre);
     end
 else
     for m = 1:N_muscles
@@ -121,7 +116,7 @@ f_FiberLength_TendonForce_tendon = Function(...
 % Function to get (normalized) muscle fiber velocities
 vM      = SX(N_muscles,1);
 vT      = SX(N_muscles,1);
-vMtilde = SX(N_muscles,N_fibres);
+vMtilde = SX(N_muscles,N_fibre);
 
 if S.multifibre.use_multifibre_muscles
     for m = 1:N_muscles
@@ -130,7 +125,7 @@ if S.multifibre.use_multifibre_muscles
             model_info.muscle_info.parameters(m).alphao,model_info.muscle_info.parameters(m).vMmax,lMT(m),...
             vMT(m),model_info.muscle_info.parameters(m).tendon_stiff,...
             model_info.muscle_info.parameters(m).tendon_stiff_shift,...
-            S.misc.constant_pennation_angle,N_fibres);
+            S.misc.constant_pennation_angle,N_fibre);
     end
 else
     for m = 1:N_muscles

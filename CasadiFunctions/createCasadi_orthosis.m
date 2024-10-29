@@ -44,6 +44,9 @@ F_all = F.map(S.solver.N_meshes,S.solver.parallel_mode,S.solver.N_threads);
 
 model_info.ExtFunIO.nOutputs = F.size1_out(0);
 
+NMuscle = model_info.muscle_info.NMuscle;
+NFibre = S.multifibre.NFibre;
+
 for N = [1,S.solver.N_meshes]
 
 
@@ -52,7 +55,7 @@ for N = [1,S.solver.N_meshes]
     q_SX = SX.sym('q',n_coord,N);
     qdot_SX = SX.sym('qdot',n_coord,N);
     qddot_SX = SX.sym('qddot',n_coord,N);
-    act_SX = SX.sym('a',model_info.muscle_info.NMuscle,N);
+    act_SX = SX.sym('a',NMuscle*NFibre,N);
     fromExtFun_SX = SX.sym('fromExtFun',F.size1_out(0),N); % GRFs, point kinematics
 
     % all outputs
@@ -101,7 +104,7 @@ for N = [1,S.solver.N_meshes]
     qs_MX = MX.sym('qs',n_coord,N);
     qdots_MX = MX.sym('qdots',n_coord,N);
     qddots_MX = MX.sym('qddots',n_coord,N);
-    act_MX = MX.sym('a',model_info.muscle_info.NMuscle,N);
+    act_MX = MX.sym('a',NMuscle*NFibre,N);
 
 
     % Create zero (sparse) input vector for external function

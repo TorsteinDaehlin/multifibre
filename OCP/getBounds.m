@@ -27,6 +27,7 @@ function [bounds_nsc] = getBounds(S,model_info)
 coordinate_names = model_info.ExtFunIO.coord_names.all;
 NCoord = model_info.ExtFunIO.jointi.nq.all;
 NMuscle = model_info.muscle_info.NMuscle;
+NFibre = S.multifibre.NFibre;
 
 %% Initialise
 coords = ["Qs","Qdots","Qdotdots"];
@@ -137,8 +138,8 @@ bounds_nsc.Qs_0.upper(model_info.ExtFunIO.jointi.base_forward) = 0;
 
 
 %% Muscle activations
-bounds_nsc.a.lower = S.bounds.activation_all_muscles.lower*ones(1,NMuscle);
-bounds_nsc.a.upper = S.bounds.activation_all_muscles.upper*ones(1,NMuscle);
+bounds_nsc.a.lower = S.bounds.activation_all_muscles.lower*ones(1,NMuscle*NFibre);
+bounds_nsc.a.upper = S.bounds.activation_all_muscles.upper*ones(1,NMuscle*NFibre);
 
 if ~isempty(S.bounds.activation_selected_muscles)
     [new_lb,new_ub] = unpack_name_value_combinations(S.bounds.activation_selected_muscles,...
@@ -174,8 +175,10 @@ bounds_nsc.FTtilde.lower = zeros(1,NMuscle);
 bounds_nsc.FTtilde.upper = 5*ones(1,NMuscle);
 
 %% Time derivative of muscle activations
-bounds_nsc.vA.lower = (-1/100*ones(1,NMuscle))./(ones(1,NMuscle)*model_info.muscle_info.tdeact);
-bounds_nsc.vA.upper = (1/100*ones(1,NMuscle))./(ones(1,NMuscle)*model_info.muscle_info.tact);
+tdeact_vec = reshape((ones(NMuscle,NFibre).*model_info.muscle_info.tdeact)',1,[]);
+tact_vec = reshape((ones(NMuscle,NFibre).*model_info.muscle_info.tact)',1,[]);
+bounds_nsc.vA.lower = (-1/100*ones(1,NMuscle*NFibre))./tdeact_vec;
+bounds_nsc.vA.upper = (1/100*ones(1,NMuscle*NFibre))./tact_vec;
 
 %% Time derivative of muscle-tendon forces
 bounds_nsc.dFTtilde.lower = -1*ones(1,NMuscle);
@@ -188,9 +191,6 @@ bounds_nsc.a_a.upper = ones(1,model_info.ExtFunIO.jointi.nq.torqAct);
 %% Torque actuator excitations
 bounds_nsc.e_a.lower = -ones(1,model_info.ExtFunIO.jointi.nq.torqAct);
 bounds_nsc.e_a.upper = ones(1,model_info.ExtFunIO.jointi.nq.torqAct);
-
-
-
 
 
 end % end of function

@@ -63,11 +63,8 @@ muscleNames = model_info.muscle_info.muscle_names;
 
 % Total number of muscles
 NMuscle = model_info.muscle_info.NMuscle;
-if S.multifibre.use_multifibre_muscles
-    NFibre = S.multifibre.NFibres;
-else
-    NFibre = 1;
-end
+NFibre = S.multifibre.NFibre;
+
 [~,mai] = MomentArmIndices_asym(muscleNames,...
     model_info.muscle_info.muscle_spanning_joint_info);
 % calculate total number of joints that each muscle crosses (used later)
@@ -122,12 +119,12 @@ opti.set_initial(tf, guess.tf);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Define states
 % Muscle activations at mesh points
-a = opti.variable(NMuscle,N+1);
+a = opti.variable(NMuscle*NFibre,N+1);
 opti.subject_to(bounds.a.lower'*ones(1,N+1) < a < ...
     bounds.a.upper'*ones(1,N+1));
 opti.set_initial(a, guess.a');
 % Muscle activations at collocation points
-a_col = opti.variable(NMuscle,d*N);
+a_col = opti.variable(NMuscle*NFibre,d*N);
 opti.subject_to(bounds.a.lower'*ones(1,d*N) < a_col < ...
     bounds.a.upper'*ones(1,d*N));
 opti.set_initial(a_col, guess.a_col');
@@ -184,7 +181,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Define controls
 % Time derivative of muscle activations (states) at mesh points
-vA = opti.variable(NMuscle, N);
+vA = opti.variable(NMuscle*NFibre, N);
 opti.subject_to(bounds.vA.lower'*ones(1,N) < vA < ...
     bounds.vA.upper'*ones(1,N));
 opti.set_initial(vA, guess.vA');
@@ -211,7 +208,7 @@ opti.set_initial(A_col, guess.Qdotdots_col');
 
 %% Helper function for orthoses
 % variables
-a_MX = MX.sym('a',NMuscle,N);
+a_MX = MX.sym('a',NMuscle*NFibre,N);
 Qs_MX = MX.sym('Qs',nq.all,N);
 Qdots_MX = MX.sym('Qdots',nq.all,N);
 Qddots_MX = MX.sym('Qddots',nq.all,N);
@@ -294,8 +291,8 @@ end
 % Define CasADi variables for static parameters
 tfk         = MX.sym('tfk'); % MX variable for final time
 % Define CasADi variables for states
-ak          = MX.sym('ak',NMuscle);
-aj          = MX.sym('akmesh',NMuscle,d);
+ak          = MX.sym('ak',NMuscle*NFibre);
+aj          = MX.sym('akmesh',NMuscle*NFibre,d);
 akj         = [ak aj];
 FTtildek    = MX.sym('FTtildek',NMuscle);
 FTtildej    = MX.sym('FTtildej',NMuscle,d);
@@ -312,7 +309,7 @@ if nq.torqAct > 0
     a_akj       = [a_ak a_aj];
 end
 % Define CasADi variables for controls
-vAk     = MX.sym('vAk',NMuscle);
+vAk     = MX.sym('vAk',NMuscle*NFibre);
 if nq.torqAct > 0
     e_ak    = MX.sym('e_ak',nq.torqAct);
 end
@@ -368,7 +365,7 @@ for j=1:d
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Get muscle-tendon forces and derive Hill-equilibrium
     [Hilldiffj,FTj,Fcej,Fpassj,Fisoj] = ...
-        f_casadi.forceEquilibrium_FtildeState_all_tendon(akj(:,j+1),...
+        f_casadi.forceEquilibrium_FtildeState_all_tendon(reshape(akj(:,j+1), [NMuscle NFibre]),...
         FTtildekj_nsc(:,j+1),dFTtildej_nsc(:,j),...
         lMTj,vMTj,tensions);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -383,8 +380,9 @@ for j=1:d
     if strcmp(S.metabolicE.model,'Bhargava2004')
         % Get metabolic energy rate Bhargava et al. (2004)
         [e_totj,~,~,~,~,~] = f_casadi.getMetabolicEnergySmooth2004all(...
-            akj(:,j+1),akj(:,j+1),lMtildej,vMj,Fcej,Fpassj,...
-            MuscleMass',pctsts,Fisoj,model_info.mass,S.metabolicE.tanh_b);
+            reshape(akj(:,j+1), [NMuscle NFibre]),reshape(akj(:,j+1), [NMuscle NFibre]), ...
+            lMtildej,vMj,Fcej,Fpassj,MuscleMass',pctsts,Fisoj,model_info.mass, ...
+            S.metabolicE.tanh_b);
     else
         error('No energy model selected');
     end
@@ -433,10 +431,10 @@ for j=1:d
     % Add contribution to the cost function
     J = J + ...
         W.E          * B(j+1) *(f_casadi.J_muscles_exp(e_totj, W.E_exp))/model_info.mass*h + ...
-        W.a          * B(j+1) *(f_casadi.J_muscles_exp(akj(:,j+1)', W.a_exp))*h + ...
+        W.a          * B(j+1) *(f_casadi.J_act_exp(akj(:,j+1)', W.a_exp))*h + ...
         W.q_dotdot   * B(j+1) *(f_casadi.J_not_arms_dof(Aj(model_info.ExtFunIO.jointi.noarmsi,j)))*h + ...
         W.pass_torq  * B(j+1) *(f_casadi.J_lim_torq(Tau_passj_cost))*h + ...
-        W.slack_ctrl * B(j+1) *(f_casadi.J_muscles(vAk))*h + ...
+        W.slack_ctrl * B(j+1) *(f_casadi.J_act(vAk))*h + ...
         W.slack_ctrl * B(j+1) *(f_casadi.J_muscles(dFTtildej(:,j)))*h;
 
     if nq.torqAct > 0
@@ -517,8 +515,8 @@ for j=1:d
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Activation dynamics (implicit formulation)
-    act1 = vAk_nsc + akj(:,j+1)./(ones(size(akj(:,j+1),1),1)*tdeact);
-    act2 = vAk_nsc + akj(:,j+1)./(ones(size(akj(:,j+1),1),1)*tact);
+    act1 = vAk_nsc + akj(:,j+1)./(reshape(ones(NFibre,NMuscle).*tdeact',[],1));
+    act2 = vAk_nsc + akj(:,j+1)./(reshape(ones(NFibre,NMuscle).*tact',[],1));
     ineq_constr_deact{end+1} = act1;
     ineq_constr_act{end+1} = act2;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -631,7 +629,7 @@ opti.subject_to(coll_eq_constr == 0);
 
 % inequality constraints (logical indexing not possible in MX arrays)
 opti.subject_to(coll_ineq_constr_deact(:) >= 0);
-opti.subject_to(coll_ineq_constr_act(:) <= 1/tact);
+opti.subject_to(coll_ineq_constr_act(:) <= 1./repmat(tact', coll_ineq_constr_act.numel()/2, 1));
 
 for i_dc=1:length(ineq_constr_distance)
     coll_ineq_constr_distance_i_dc = coll_ineq_constr_distance{i_dc};
@@ -689,7 +687,10 @@ if strcmp(S.misc.gaitmotion_type,'HalfGaitCycle')
         opti.subject_to(Qdots(model_info.ExtFunIO.symQs.QsOpp,end) + Qdots(model_info.ExtFunIO.symQs.QsOpp,1) == 0);
     end
     % Muscle activations
-    opti.subject_to(a(model_info.ExtFunIO.symQs.MusInvA,end) - a(model_info.ExtFunIO.symQs.MusInvB,1) == 0);
+    tmpA = reshape(a(:,end), [NFibre, NMuscle]);
+    tmpB = reshape(a(:,1), [NFibre, NMuscle]);
+    opti.subject_to(reshape(tmpA(:,model_info.ExtFunIO.symQs.MusInvA),[NMuscle*NFibre,1]) ...
+        - reshape(tmpB(:,model_info.ExtFunIO.symQs.MusInvB),[NMuscle*NFibre,1]) == 0);
     % Muscle-tendon forces
     opti.subject_to(FTtilde(model_info.ExtFunIO.symQs.MusInvA,end) - FTtilde(model_info.ExtFunIO.symQs.MusInvB,1) == 0);
     % Torque actuator activations
@@ -837,10 +838,10 @@ disp(' ')
 NParameters = 1;
 tf_opt = w_opt(1:NParameters);
 starti = NParameters+1;
-a_opt = reshape(w_opt(starti:starti+NMuscle*(N+1)-1),NMuscle,N+1)';
-starti = starti + NMuscle*(N+1);
-a_col_opt = reshape(w_opt(starti:starti+NMuscle*(d*N)-1),NMuscle,d*N)';
-starti = starti + NMuscle*(d*N);
+a_opt = reshape(w_opt(starti:starti+NMuscle*NFibre*(N+1)-1),NMuscle*NFibre,N+1)';
+starti = starti + NMuscle*NFibre*(N+1);
+a_col_opt = reshape(w_opt(starti:starti+NMuscle*NFibre*(d*N)-1),NMuscle*NFibre,d*N)';
+starti = starti + NMuscle*NFibre*(d*N);
 FTtilde_opt = reshape(w_opt(starti:starti+NMuscle*(N+1)-1),NMuscle,N+1)';
 starti = starti + NMuscle*(N+1);
 FTtilde_col_opt =reshape(w_opt(starti:starti+NMuscle*(d*N)-1),NMuscle,d*N)';
@@ -859,8 +860,8 @@ if nq.torqAct > 0
     a_a_col_opt = reshape(w_opt(starti:starti+nq.torqAct*(d*N)-1),nq.torqAct,d*N)';
     starti = starti + nq.torqAct*(d*N);
 end
-vA_opt = reshape(w_opt(starti:starti+NMuscle*N-1),NMuscle,N)';
-starti = starti + NMuscle*N;
+vA_opt = reshape(w_opt(starti:starti+NMuscle*NFibre*N-1),NMuscle*NFibre,N)';
+starti = starti + NMuscle*NFibre*N;
 if nq.torqAct > 0
     e_a_opt = reshape(w_opt(starti:starti+nq.torqAct*N-1),nq.torqAct,N)';
     starti = starti + nq.torqAct*N;
@@ -894,7 +895,7 @@ if starti - 1 ~= length(w_opt)
 end
 
 % Combine results at mesh and collocation points
-a_mesh_col_opt=zeros(N*(d+1)+1,NMuscle);
+a_mesh_col_opt=zeros(N*(d+1)+1,NMuscle*NFibre);
 a_mesh_col_opt(1:(d+1):end,:)= a_opt;
 FTtilde_mesh_col_opt=zeros(N*(d+1)+1,NMuscle);
 FTtilde_mesh_col_opt(1:(d+1):end,:)= FTtilde_opt;

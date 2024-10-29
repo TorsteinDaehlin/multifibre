@@ -52,14 +52,12 @@ function [model_info] = read_and_scale_MTparameters(S,osim_path,model_info)
 muscle_info = model_info.muscle_info;
 muscleNames = muscle_info.muscle_names;
 NMuscle = muscle_info.NMuscle;
-if S.multifibre.use_multifibre_muscles
-    NFibres = S.multifibre.NFibres; 
-end
+NFibre = S.multifibre.NFibre;
 
 %% read default muscle- and tendon parameters from opensim model file
 [FMo, lMo, lTs, alphao, vMmax] = getMTparameters(osim_path,muscleNames);
 if S.multifibre.use_multifibre_muscles
-    vMmax = repmat(linspace(S.multifibre.vMmax_range(1), S.multifibre.vMmax_range(end), NFibres)', 1, NMuscle) .* lMo;
+    vMmax = repmat(linspace(S.multifibre.vMmax_range(1), S.multifibre.vMmax_range(end), NFibre)', 1, NMuscle) .* lMo;
 end
 
 %% parameters not from osim file
@@ -79,13 +77,14 @@ muscle_strength = ones(1,NMuscle);
 muscle_pass_stiff_shift = ones(1,NMuscle);
 muscle_pass_stiff_scale = ones(1,NMuscle);
 
-% Add per_fibre variables if multifibre is used
+% proportion of muscle PCSA per motor unit
 if S.multifibre.use_multifibre_muscles
-    if NFibres == 2
+    if NFibre == 2
         per_fibre = [slow_twitch_fiber_ratio', 1 - slow_twitch_fiber_ratio'];
     else
-        tmp_per_fibre = exp((log(S.multifibre.RP)*(1:NFibres)-1)/(NFibres-1)); % From Potvind & Fuglevand, 2017
-        per_fibre = repmat((tmp_per_fibre/sum(tmp_per_fibre))',[1,NMuscle]); % percentage slow vs. fast fibres for each muscle
+        % Create motor unit pool as described by Potvind & Fuglevand, 2017
+        tmp_per_fibre = exp((log(S.multifibre.RP)*(1:NFibre)-1)/(NFibre-1)); 
+        per_fibre = repmat((tmp_per_fibre/sum(tmp_per_fibre))',[1,NMuscle]);
     end
 end
 
@@ -134,8 +133,8 @@ model_info.muscle_info = muscle_info;
 
 % Time constants of excitation-activation dynamics are fixed.
 if S.multifibre.use_multifibre_muscles
-    model_info.muscle_info.tact = fliplr(linspace(S.multifibre.tact_range(1), S.multifibre.tact_range(end), NFibres)); % activation - slow to fast
-    model_info.muscle_info.tdeact = model_info.muscle_info.tact ./ S.multifibre.tdeact_beta; % deactivation
+    model_info.muscle_info.tact = fliplr(linspace(S.multifibre.tact_range(1), S.multifibre.tact_range(end), NFibre)); % activation - slow to fast
+    model_info.muscle_info.tdeact = model_info.muscle_info.tact ./ S.multifibre.beta; % deactivation - slow to fast
 else
     model_info.muscle_info.tact = 0.015; % activation
     model_info.muscle_info.tdeact = 0.06; % deactivation

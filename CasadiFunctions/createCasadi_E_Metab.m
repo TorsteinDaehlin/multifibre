@@ -27,15 +27,11 @@ function [fgetMetabolicEnergySmooth2004all] = createCasadi_E_Metab(S,model_info)
 import casadi.*
 NMuscle = model_info.muscle_info.NMuscle;
 FMo = struct_array_to_double_array(model_info.muscle_info.parameters,'FMo');
-if S.multifibre.use_multifibre_muscles
-    NFibres = S.multifibre.NFibres;
-else
-    NFibres = 1;
-end
+NFibre = S.multifibre.NFibre;
 
 %% Metabolic energy models
-act_SX          = SX.sym('act_SX',NMuscle,NFibres); % Muscle activations
-exc_SX          = SX.sym('exc_SX',NMuscle,NFibres); % Muscle excitations
+act_SX          = SX.sym('act_SX',NMuscle,NFibre); % Muscle activations
+exc_SX          = SX.sym('exc_SX',NMuscle,NFibre); % Muscle excitations
 lMtilde_SX      = SX.sym('lMtilde_SX',NMuscle,1); % N muscle fiber lengths
 vM_SX           = SX.sym('vM_SX',NMuscle,1); % Muscle fiber velocities
 Fce_SX          = SX.sym('FT_SX',NMuscle,1); % Contractile element forces
