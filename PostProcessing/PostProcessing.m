@@ -46,7 +46,7 @@ R.misc.body_weight = model_info.mass*9.81;
 
 % Saves a .mot file containing 2 full gait cycles, for visualisation in the
 % OpenSim GUI.
-[R] = PostProcess_write_motion_file(model_info,f_casadi,R);
+[R] = PostProcess_write_motion_file(S, model_info,f_casadi,R);
 
 % Get Inverse Dynamic torque (or force) for each coordinate.
 [R] = PostProcess_get_ID(model_info,f_casadi,R);
@@ -56,7 +56,7 @@ R.misc.body_weight = model_info.mass*9.81;
 
 % Reconstruct muscle excitations from implicit activation dynamics
 % formulation.
-[R] = PostProcess_muscle_excitations(model_info,f_casadi,R);
+[R] = PostProcess_muscle_excitations(S, model_info,f_casadi,R);
 
 % Evaluate the approximated muscle-tendon lenghts and -velocities, and
 % moment arms. Compare the approximated with the geometry from the original
@@ -64,7 +64,7 @@ R.misc.body_weight = model_info.mass*9.81;
 [R] = PostProcess_msk_geometry(model_info,f_casadi,R);
 
 % Reconstruct all force- and length components of muscle fiber and tendon.
-[R] = PostProcess_muscletendon_dynamics(model_info,f_casadi,R);
+[R] = PostProcess_muscletendon_dynamics(S, model_info,f_casadi,R);
 
 % Evaluate ligament lengths, forces, powers
 [R] = PostProcessing_ligaments(model_info,f_casadi,R);
@@ -77,7 +77,7 @@ R.misc.body_weight = model_info.mass*9.81;
 
 % Evaluate the metabolic energetics for all implemented metabolic energy
 % models.
-[R] = PostProcess_metabolic_energy(model_info,f_casadi,R);
+[R] = PostProcess_metabolic_energy(S,model_info,f_casadi,R);
 
 % Calculate orthosis forces
 [R] = PostProcess_orthosis(model_info,f_casadi,R);

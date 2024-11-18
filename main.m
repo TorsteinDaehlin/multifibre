@@ -15,12 +15,12 @@ clc
 %% Initialize S
 addpath(fullfile(pathRepo,'DefaultSettings'))
 
-[S] = initializeSettings('Falisse_et_al_2022');
+[S] = initializeSettings('gait1018');
 
 %% Settings
 
 % name of the subject
-S.subject.name = 'Falisse_et_al_2022';
+S.subject.name = 'gait1018';
 
 % path to folder where you want to store the results of the OCP
 S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',S.subject.name); 
@@ -37,6 +37,17 @@ S.multifibre.vMmax_range = [5 10]; % Range of max contraction velocities as mult
 S.multifibre.tact_range = [0.01 0.02]; % Range of activation time constants 
 S.multifibre.beta = 0.6; % deactivation time constants are given by tact * (1 / beta).
 
+% Set cost functional weights
+% S.weights.a = 1000; % Reduced to half of the original cost, as this weight is multiplied by a sum over twice as many activations.
+
+% Set number of threads
+% S.solver.N_threads = 6;
+
+S.misc.gaitmotion_type = 'FullGaitCycle';
+
+% Visualize bounds
+S.misc.visualize_bounds = true;
+
 % give the path to the osim model of your subject
 osim_path = fullfile(pathRepo,'Subjects',S.subject.name,[S.subject.name '.osim']);
 
@@ -52,14 +63,14 @@ osim_path = fullfile(pathRepo,'Subjects',S.subject.name,[S.subject.name '.osim']
 if ~S.solver.run_as_batch_job
 
     % set path to reference result
-    result_paths{1} = fullfile(pathRepo,'Tests','ReferenceResults',...
-        'Falisse_et_al_2022','Falisse_et_al_2022_paper.mat');
+    % result_paths{1} = fullfile(pathRepo,'Tests','ReferenceResults',...
+    %     'Falisse_et_al_2022','Falisse_et_al_2022_paper.mat');
     
     % set path to saved result
-    result_paths{2} = fullfile(S.misc.save_folder,[savename '.mat']);
+    result_paths{1} = fullfile(S.misc.save_folder,[savename '.mat']);
     
     % Cell array with legend name for each result
-    legend_names = {'Reference result', 'Your first simulation'};
+    legend_names = {'multifibre'};
     
     % add path to subfolder with plotting functions
     addpath(fullfile(pathRepo,'PlotFigures'))
@@ -69,7 +80,7 @@ if ~S.solver.run_as_batch_job
     figure_settings(1).variables = {'Qs'};
     figure_settings(1).savepath = [];
     figure_settings(1).filetype = {};
-    
+
     % call plotting function
     plot_figures(result_paths, legend_names, figure_settings);
 

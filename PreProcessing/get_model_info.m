@@ -102,6 +102,11 @@ end
 symQs.MusInvA = orderMus;
 symQs.MusInvB = orderMusInv;
 
+% Activation symmetry
+orderMAct = reshape(1:length(model_info.muscle_info.muscle_names)*S.multifibre.NFibre, S.multifibre.NFibre, []);
+symQs.MActInvA = reshape(orderMAct(:,symQs.MusInvA), 1, []);
+symQs.MActInvB = reshape(orderMAct(:,symQs.MusInvB), 1, []);
+
 model_info.ExtFunIO.symQs = symQs;
 
 %% indices for left and right side muscles

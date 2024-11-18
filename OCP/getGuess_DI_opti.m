@@ -97,6 +97,8 @@ guess.Qdotdots = interp1(round(Qs_time,4),guess.Qdotdots_all,round(interval,4));
 
 %% Muscle variables
 guess.a = 0.1*ones(N,NMuscle*NFibre);
+% try to guess all slow-twitch as high activations
+% guess.a(:,1:2:end-1) = 1;
 guess.vA = 0.01*ones(N,NMuscle*NFibre);
 guess.FTtilde = 0.1*ones(N,NMuscle);
 guess.dFTtilde = 0.01*ones(N,NMuscle);
@@ -132,12 +134,7 @@ if strcmp(S.misc.gaitmotion_type,'HalfGaitCycle')
     
     guess.Qs = [guess.Qs; inv_X_Qs];
     guess.Qdots = [guess.Qdots; inv_X_Qdots];
-    if S.multifibre.use_multifibre_muscles
-        tmp = reshape(guess.a(1,:), NFibre, []);
-        guess.a = [guess.a; reshape(tmp(:,model_info.ExtFunIO.symQs.MusInvB),1,[])];
-    else
-        guess.a = [guess.a; guess.a(1,model_info.ExtFunIO.symQs.MusInvB)];
-    end
+    guess.a = [guess.a; guess.a(1,model_info.ExtFunIO.symQs.MActInvB)];
     guess.FTtilde = [guess.FTtilde; guess.FTtilde(1,model_info.ExtFunIO.symQs.MusInvB)];
     guess.a_a = [guess.a_a; guess.a_a(1,:)];
 else

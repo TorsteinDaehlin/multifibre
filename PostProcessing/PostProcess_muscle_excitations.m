@@ -1,4 +1,4 @@
-function [R] = PostProcess_muscle_excitations(model_info,f_casadi,R)
+function [R] = PostProcess_muscle_excitations(S, model_info,f_casadi,R)
 % --------------------------------------------------------------------------
 % PostProcess_muscle_excitations
 %   This function computes muscle excitations from time derivative of muscle 
@@ -28,10 +28,10 @@ function [R] = PostProcess_muscle_excitations(model_info,f_casadi,R)
 
 
 % Activation time constant
-tact = ones(1,model_info.muscle_info.NMuscle)*model_info.muscle_info.tact; 
+tact = reshape(ones(S.multifibre.NFibre,model_info.muscle_info.NMuscle).*model_info.muscle_info.tact', 1, S.multifibre.NFibre*model_info.muscle_info.NMuscle); 
 
 % Deactivation time constant
-tdeact = ones(1,model_info.muscle_info.NMuscle)*model_info.muscle_info.tdeact; 
+tdeact = reshape(ones(S.multifibre.NFibre,model_info.muscle_info.NMuscle).*model_info.muscle_info.tdeact', 1, S.multifibre.NFibre*model_info.muscle_info.NMuscle); 
 
 % Compute excitations
 R.muscles.e = computeExcitationRaasch(R.muscles.a,R.muscles.da,tdeact,tact);

@@ -1,4 +1,4 @@
-function [R] = PostProcess_muscletendon_dynamics(model_info,f_casadi,R)
+function [R] = PostProcess_muscletendon_dynamics(S, model_info,f_casadi,R)
 % --------------------------------------------------------------------------
 % PostProcess_muscletendon_dynamics
 %   This function computes the muscle-tendon forces, fiber lenghts- and
@@ -27,6 +27,7 @@ function [R] = PostProcess_muscletendon_dynamics(model_info,f_casadi,R)
 
 N = size(R.kinematics.Qs,1);
 NMuscle = model_info.muscle_info.NMuscle;
+NFibre = S.multifibre.NFibre;
 
 tensions = struct_array_to_double_array(model_info.muscle_info.parameters,'specific_tension');
 
@@ -38,13 +39,13 @@ R.muscles.Fiso = FT;
 R.muscles.lM = FT;
 R.muscles.lMtilde = FT;
 R.muscles.vM = FT;
-R.muscles.vMtilde = FT;
+R.muscles.vMtilde = zeros(N, NMuscle*NFibre);
 R.muscles.lT = FT;
 R.muscles.vT = FT;
 
 for i=1:N
 
-    [~,FTj,Fcej,Fpassj,Fisoj] = f_casadi.forceEquilibrium_FtildeState_all_tendon(R.muscles.a(i,:)',...
+    [~,FTj,Fcej,Fpassj,Fisoj] = f_casadi.forceEquilibrium_FtildeState_all_tendon(reshape(R.muscles.a(i,:), NFibre, NMuscle)',...
         R.muscles.FTtilde(i,:)',R.muscles.dFTtilde(i,:)',R.muscles.lMT(i,:)',R.muscles.vMT(i,:)',tensions);
 
     R.muscles.FT(i,:) = full(FTj);
@@ -61,7 +62,7 @@ for i=1:N
         R.muscles.FTtilde(i,:)',R.muscles.dFTtilde(i,:)',R.muscles.lMT(i,:)',R.muscles.vMT(i,:)');
 
     R.muscles.vM(i,:) = full(vMj);
-    R.muscles.vMtilde(i,:) = full(vMtildej);
+    R.muscles.vMtilde(i,:) = reshape(full(vMtildej)', 1, NFibre*NMuscle);
 
     [lTj,vTj] = f_casadi.lT_vT(R.muscles.FTtilde(i,:)',R.muscles.dFTtilde(i,:)',R.muscles.lMT(i,:)',R.muscles.vMT(i,:)');
 

@@ -1,4 +1,4 @@
-function [R] = PostProcess_write_motion_file(model_info,f_casadi,R)
+function [R] = PostProcess_write_motion_file(S, model_info,f_casadi,R)
 % --------------------------------------------------------------------------
 % PostProcess_write_motion_file
 %   This function creates a motionfile with 2 steps of predicted gait.
@@ -36,8 +36,15 @@ JointAngle.labels = [{'time'},model_info.ExtFunIO.coord_names.all(:)'];
 
 q_opt_GUI_GC = [t_mesh',[q_opt_GUI_GC_1;q_opt_GUI_GC_2]];
 % Muscle activations (to have muscles turning red when activated).
-Acts_GC = R.muscles.a;
+if S.multifibre.use_multifibre_muscles
+    % Use only slow twitch activations to color muscles for now (average
+    % may be a better option)
+    Acts_GC = R.muscles.a(:,1:S.multifibre.NFibre:end - S.multifibre.NFibre + 1);
+else
+    Acts_GC = R.muscles.a;
+end
 Acts_GC_GUI = [Acts_GC;Acts_GC];
+
 % Combine data joint angles and muscle activations
 JointAngleMuscleAct.data = [q_opt_GUI_GC,Acts_GC_GUI];
 % Combine labels joint angles and muscle activations

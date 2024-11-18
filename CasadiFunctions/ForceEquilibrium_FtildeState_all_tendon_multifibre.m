@@ -1,4 +1,4 @@
-function [err, FT, Fce, Fpass, Fiso, vMmax, massM] = ...
+function [err, FT, Fce, Fpass, Fiso, vMmax, massM, Fcetilde_out] = ...
     ForceEquilibrium_FtildeState_all_tendon_multifibre(a, fse, dfse, lMT, ...
     vMT, FMo_in, lMo_in, lTs_in, alphao_in, vMmax_in, Fvparam, Fpparam, ...
     Faparam, tension, aTendon, shift, MuscMoAsmp, d, stiffness_shift, ...
@@ -7,16 +7,16 @@ function [err, FT, Fce, Fpass, Fiso, vMmax, massM] = ...
 % ForceEquilibrium_FtildeState_all_tendon
 %    This function derives the Hill-equilibrium.
 %    More details in De Groote et al. (2016): DOI: 10.1007/s10439-016-1591-9
-%   
+%
 % INPUT:
 %
 % OUTPUT:
-% 
+%
 % Original author: Antoine Falisse
 % Original date: 12/19/2018
 %
 %   Adapted to allow assumption of constant pennation angle, by Lars D'Hondt.
-%   Adapted to take parameters for muscle stiffness and strength as input, 
+%   Adapted to take parameters for muscle stiffness and strength as input,
 %   by Lars D'Hondt.
 %   Refactored to allow multiple fibre type compositions, by Torstein
 %   Daehlin.
@@ -46,7 +46,7 @@ lTtilde = log(5*(fse + 0.25 - shift)) ./ Atendon + 0.995;
 if(MuscMoAsmp == 0) % b = cst
     lM = sqrt((lMo .* sin(alphao)).^2 + (lMT - lTs .* lTtilde).^2);
 else    % alpha = cst = alphao
-   lM = (lMT-lTs .* lTtilde) ./ cos(alphao);
+    lM = (lMT-lTs .* lTtilde) ./ cos(alphao);
 end
 lMtilde = lM ./ lMo;
 
@@ -89,12 +89,15 @@ e2 = Fvparam(2);
 e3 = Fvparam(3);
 e4 = Fvparam(4);
 
-Fcetilde = 0;
+FMvtilde = 0;
+Fcetilde_out = [];
 for i = 1:n_fibre
-    vMtilde =  vM ./ vMmax(i);
-    FMvtilde = e1 * log(( e2 * vMtilde + e3) + sqrt(( e2 * vMtilde + e3).^2 + 1)) + e4;
-    Fcetilde = Fcetilde + (strength .* a(i) .* FMltilde .* FMvtilde + d .* vMtilde) * FMo_sep(i);
+    vMtilde =  vM ./ vMmax(:, i);
+    FMvtilde_sep = e1 * log(( e2 * vMtilde + e3) + sqrt(( e2 * vMtilde + e3).^2 + 1)) + e4;
+    FMvtilde = FMvtilde + ((a(:, i) .* FMvtilde_sep) + (d .* vMtilde)) .* FMo_sep(:, i);
+    Fcetilde_out = [Fcetilde_out (((a(:, i) .* FMvtilde_sep) + (d .* vMtilde)) .* FMo_sep(:, i) .* strength .* FMltilde)];
 end
+Fcetilde = strength .* FMltilde .* FMvtilde;
 
 % Active muscle force
 Fce = FMo .* Fcetilde;
