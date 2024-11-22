@@ -629,7 +629,7 @@ opti.subject_to(coll_eq_constr == 0);
 
 % inequality constraints (logical indexing not possible in MX arrays)
 opti.subject_to(coll_ineq_constr_deact(:) >= 0);
-opti.subject_to(coll_ineq_constr_act(:) <= 1./repmat(tact', coll_ineq_constr_act.numel()/2, 1));
+opti.subject_to(coll_ineq_constr_act(:) <= 1./repmat(tact', coll_ineq_constr_act.numel()/numel(tact), 1));
 
 for i_dc=1:length(ineq_constr_distance)
     coll_ineq_constr_distance_i_dc = coll_ineq_constr_distance{i_dc};

@@ -46,7 +46,7 @@ S.multifibre.beta = 0.6; % deactivation time constants are given by tact * (1 / 
 S.misc.gaitmotion_type = 'FullGaitCycle';
 
 % Visualize bounds
-S.misc.visualize_bounds = true;
+% S.misc.visualize_bounds = true;
 
 % give the path to the osim model of your subject
 osim_path = fullfile(pathRepo,'Subjects',S.subject.name,[S.subject.name '.osim']);
