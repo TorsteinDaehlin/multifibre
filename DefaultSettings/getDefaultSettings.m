@@ -719,10 +719,15 @@ if ~isfield(S.multifibre,'use_multifibre_muscles')
 end
 
 % Number of muscle fibres
-if ~isfield(S.multifibre,'NFibres') && S.multifibre.use_multifibre_muscles
+if ~isfield(S.multifibre,'NFibre') && S.multifibre.use_multifibre_muscles
     S.multifibre.NFibre = 2;
 elseif ~S.multifibre.use_multifibre_muscles
     S.multifibre.NFibre = 1;
+end
+
+% Constant scaling deactivation time constants and muscle velocity
+if ~isfield(S.multifibre,'smeta') && S.multifibre.use_multifibre_muscles
+    S.multifibre.smeta = linspace(1.5, 2.5, S.multifibre.NFibre);
 end
 
 % Constant scaling deactivation time constants and muscle velocity
@@ -740,4 +745,8 @@ if ~isfield(S.multifibre,'vMmax_range') && S.multifibre.use_multifibre_muscles
     S.multifibre.vMmax_range = [6, (6 / S.multifibre.beta)];
 end
 
+% Ratio between smallest and largest motor unit pool force capacity
+if ~isfield(S.multifibre,'RP') && S.multifibre.use_multifibre_muscles
+    S.multifibre.RP = 10;
+end
 end

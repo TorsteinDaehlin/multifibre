@@ -1,4 +1,4 @@
-function [double_array] = struct_array_to_double_array(struct_array,fieldname)
+function [double_array] = struct_array_to_double_array(struct_array,fieldname, varargin)
 % --------------------------------------------------------------------------
 % struct_array_to_double_array
 %   Helper function to read a cell array of structs and return an array
@@ -24,7 +24,11 @@ function [double_array] = struct_array_to_double_array(struct_array,fieldname)
 
 
 N = length(struct_array);
-Nval = 1; % expected number of doubles in field
+if nargin > 2
+    Nval = varargin{1};
+else
+    Nval = 1; % expected number of doubles in field
+end
 double_array = nan(N,Nval);
 
 for i=1:N

@@ -65,6 +65,15 @@ end
 E_sum_GC = trapz(R.time.mesh_GC(1:end-1),R.metabolics.Bhargava2004.Edot_incl_basal);
 R.metabolics.Bhargava2004.COT = E_sum_GC/R.misc.body_mass/R.spatiotemp.dist_trav;
 
+%% Minetti & Alexander 1997
+R.metabolics.MinettiAlexander.Edot_gait = zeros(N,NMuscle);
+
+for i=1:N
+    Edot_tot_i = f_casadi.getMetabolicEnergyMinettiAlexander_multifibre(...
+            reshape(R.muscles.a(i,:), NFibre, NMuscle)', R.muscles.vM(i,:)');
+
+    R.metabolics.MinettiAlexander.Edot_gait(i,:) = full(Edot_tot_i)';
+end
 %% ...
 % Please add other energy models below. 
 % Add the different terms to the struct with results R under the field

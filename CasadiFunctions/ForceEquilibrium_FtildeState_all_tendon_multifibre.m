@@ -24,7 +24,7 @@ function [err, FT, Fce, Fpass, Fiso, vMmax, massM, Fcetilde_out] = ...
 % Last edit date: 15/Oct/2024
 % --------------------------------------------------------------------------
 
-FMo = ones(size(a(:, 1), 1), 1) * FMo_in;
+FMo = ones(size(a(:, 1), 1), 1) * FMo_in; % size(a(:,1),1) == size(a,1)?
 lMo = ones(size(a, 1), 1) * lMo_in;
 lTs = ones(size(a, 1), 1) * lTs_in;
 alphao = ones(size(a, 1), 1) * alphao_in;
@@ -36,7 +36,7 @@ massM = volM .* (1059.7) ./ (tension * 1e6);
 % Parameters by fibre
 for i = 1:n_fibre
     vMmax(:, i) = ones(size(a, 1), 1) * vMmax_in(i);
-    FMo_sep(:, i) = ones(size(a, 1), 1) * FMo_in * per_fibre(i);
+    per_sep(:, i) = ones(size(a, 1), 1) * per_fibre(i);
 end
 
 % Inverse tendon force-length characteristic
@@ -94,12 +94,13 @@ Fcetilde_out = [];
 for i = 1:n_fibre
     vMtilde =  vM ./ vMmax(:, i);
     FMvtilde_sep = e1 * log(( e2 * vMtilde + e3) + sqrt(( e2 * vMtilde + e3).^2 + 1)) + e4;
-    FMvtilde = FMvtilde + ((a(:, i) .* FMvtilde_sep) + (d .* vMtilde)) .* FMo_sep(:, i);
-    Fcetilde_out = [Fcetilde_out (((a(:, i) .* FMvtilde_sep) + (d .* vMtilde)) .* FMo_sep(:, i) .* strength .* FMltilde)];
+    FMvtilde = FMvtilde + ((a(:, i) .* FMvtilde_sep) + (d .* vMtilde)) .* per_sep(:, i);
+    Fcetilde_out = [Fcetilde_out (((a(:, i) .* FMvtilde_sep) + (d .* vMtilde)) .* per_sep(:, i) .* strength .* FMltilde)];
 end
 Fcetilde = strength .* FMltilde .* FMvtilde;
 
 % Active muscle force
+% Fce = FMo .* Fcetilde;
 Fce = FMo .* Fcetilde;
 
 % Passive muscle force-length characteristic

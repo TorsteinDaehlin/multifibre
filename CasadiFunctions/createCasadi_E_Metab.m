@@ -1,4 +1,4 @@
-function [fgetMetabolicEnergySmooth2004all] = createCasadi_E_Metab(S,model_info)
+function [fgetMetabolicEnergySmooth2004all, fgetMetabolicEnergyMinettiAlexander_multifibre] = createCasadi_E_Metab(S,model_info)
 % --------------------------------------------------------------------------
 % createCasadi_E_Metab
 %   Function to create Casadi functions for metabolic energy.
@@ -26,8 +26,11 @@ function [fgetMetabolicEnergySmooth2004all] = createCasadi_E_Metab(S,model_info)
 
 import casadi.*
 NMuscle = model_info.muscle_info.NMuscle;
-FMo = struct_array_to_double_array(model_info.muscle_info.parameters,'FMo');
 NFibre = S.multifibre.NFibre;
+FMo = struct_array_to_double_array(model_info.muscle_info.parameters,'FMo');
+vMmax = struct_array_to_double_array(model_info.muscle_info.parameters,'vMmax', NFibre);
+per_fibre = struct_array_to_double_array(model_info.muscle_info.parameters, 'per_fibre', NFibre);
+
 
 %% Metabolic energy models
 act_SX          = SX.sym('act_SX',NMuscle,NFibre); % Muscle activations
@@ -42,6 +45,7 @@ pctst_SX        = SX.sym('pctst_SX',NMuscle,1); % Slow twitch ratio
 modelmass_SX    = SX.sym('modelmass_SX',1); % Model mass
 b_SX            = SX.sym('b_SX',1); % Parameter determining tanh smoothness
 % Bhargava et al. (2004)
+
 
 if S.multifibre.use_multifibre_muscles
     [energy_total_sm_SX,Adot_sm_SX,Mdot_sm_SX,Sdot_sm_SX,Wdot_sm_SX,...
@@ -61,4 +65,11 @@ fgetMetabolicEnergySmooth2004all = ...
     {exc_SX,act_SX,lMtilde_SX,vM_SX,Fce_SX,Fpass_SX,musclemass_SX,...
     pctst_SX,Fiso_SX,modelmass_SX,b_SX},{energy_total_sm_SX,...
     Adot_sm_SX,Mdot_sm_SX,Sdot_sm_SX,Wdot_sm_SX,energy_model_sm_SX});
+
+energy_total_sm_SX = getMetabolicEnergyMinettiAlexander_multifibre(act_SX, vM_SX, ...
+    FMo, vMmax, per_fibre, S.multifibre.smeta, NFibre);
+
+fgetMetabolicEnergyMinettiAlexander_multifibre = ...
+    Function('fgetMetabolicEnergyMinettiAlexander_multifibre', ...
+    {act_SX, vM_SX}, {energy_total_sm_SX});
 end
