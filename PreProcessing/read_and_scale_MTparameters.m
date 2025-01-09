@@ -69,6 +69,13 @@ specific_tension = getSpecificTensions(muscleNames)';
 
 % ratio of slow twitch muscle fibers
 slow_twitch_fiber_ratio = getSlowTwitchRatios(muscleNames)';
+if isfield(S, 'param_shift')
+    if isfield(S.param_shift, 'slow_to_fast') && ~isempty(S.param_shift.slow_to_fast)
+        slow_twitch_fiber_ratio = slow_twitch_fiber_ratio.* S.param_shift.slow_to_fast;
+    elseif isfield(S.param_shift, 'fast_to_slow') && ~isempty(S.param_shift.fast_to_slow)
+        slow_twitch_fiber_ratio = fliplr(1 - (1 - slow_twitch_fiber_ratio).* S.param_shift.fast_to_slow);
+    end
+end
 
 % strength of active muscle force
 muscle_strength = ones(1,NMuscle);
