@@ -53,6 +53,10 @@ scaling.dFTtilde = 100;
 scaling.FTtilde = max(abs(bounds_nsc.FTtilde.lower),abs(bounds_nsc.FTtilde.upper)); 
 % Joint moment equality constraints
 scaling.Moments = ones(1,NCoord);
+% Pedal forces
+if strcmp(S.misc.task, 'cycling')
+    scaling.FPedal = 100;
+end
 
 %% Based on provided table
 fields = ["Qs","Qdots","Qdotdots","Moments"];

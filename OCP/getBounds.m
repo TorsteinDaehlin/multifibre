@@ -192,5 +192,12 @@ bounds_nsc.a_a.upper = ones(1,model_info.ExtFunIO.jointi.nq.torqAct);
 bounds_nsc.e_a.lower = -ones(1,model_info.ExtFunIO.jointi.nq.torqAct);
 bounds_nsc.e_a.upper = ones(1,model_info.ExtFunIO.jointi.nq.torqAct);
 
+%% Pedal forces
+if strcmp(S.misc.task, 'cycling')
+    n_forces = numel(model_info.ExtFunIO.input.Forces.pedal_force_r) + ...
+        numel(model_info.ExtFunIO.input.Forces.pedal_force_l);
+    bounds_nsc.FPedal.lower = ones(1, n_forces) * S.bounds.FPedal.lower;
+    bounds_nsc.FPedal.upper = ones(1, n_forces) * S.bounds.FPedal.upper;
+end
 
 end % end of function

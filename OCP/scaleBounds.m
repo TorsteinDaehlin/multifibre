@@ -44,6 +44,11 @@ bounds.Qdotdots.upper(isnan(bounds.Qdotdots.upper)) = 0;
 % Muscle-tendon forces
 bounds_nsc.FTtilde.lower    = (bounds_nsc.FTtilde.lower)./scaling.FTtilde;
 bounds_nsc.FTtilde.upper    = (bounds_nsc.FTtilde.upper)./scaling.FTtilde;
+% Pedal forces
+if strcmp(S.misc.task, 'cycling')
+    bounds.FPedal.lower = (bounds_nsc.FPedal.lower)./scaling.FPedal;
+    bounds.FPedal.upper = (bounds_nsc.FPedal.upper)./scaling.FPedal;
+end
 
 % We impose the initial position of pelvis_tx to be 0
 bounds.Qs_0.lower = bounds.Qs.lower;

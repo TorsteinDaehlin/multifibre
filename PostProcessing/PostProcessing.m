@@ -52,7 +52,11 @@ R.misc.body_weight = model_info.mass*9.81;
 [R] = PostProcess_get_ID(model_info,f_casadi,R);
 
 % Compute variables related to foot-ground contact.
-[R] = PostProcess_ground_reaction(model_info,f_casadi,R);
+if strcmp(S.misc.task, 'cycling')
+    [R] = PostProcess_pedal_force(model_info,f_casadi,R);
+else
+    [R] = PostProcess_ground_reaction(model_info,f_casadi,R);
+end
 
 % Reconstruct muscle excitations from implicit activation dynamics
 % formulation.
@@ -73,15 +77,18 @@ R.misc.body_weight = model_info.mass*9.81;
 [R] = PostProcess_passive_moments(model_info,f_casadi,R);
 
 % Compute spatio-temporal characteristics of the full gait cycle.
-[R] = PostProcess_spatio_temporal(model_info,f_casadi,R);
+if ~strcmp(S.misc.task, 'cycling')
+    [R] = PostProcess_spatio_temporal(model_info,f_casadi,R);
+end
 
 % Evaluate the metabolic energetics for all implemented metabolic energy
 % models.
 [R] = PostProcess_metabolic_energy(S,model_info,f_casadi,R);
 
 % Calculate orthosis forces
-[R] = PostProcess_orthosis(model_info,f_casadi,R);
-
+if ~strcmp(S.misc.task, 'cycling')
+    [R] = PostProcess_orthosis(model_info,f_casadi,R);
+end
 % Please implement additional post-processing steps as functions following
 % the template, and call them from here.
 % [R] = PostProcessing_subfunction_template(model_info,f_casadi,R);

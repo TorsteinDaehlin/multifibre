@@ -127,7 +127,11 @@ disp(' ')
 %% Formulating OCP
 addpath([S.misc.main_path '\OCP'])
 if ~S.post_process.rerun
-    OCP_formulation(S,model_info,f_casadi);
+    if strcmp(S.misc.task, 'cycling')
+        OCP_formulation_cycling(S, model_info, f_casadi);
+    else
+        OCP_formulation(S,model_info,f_casadi);
+    end
     disp(' ')
     disp(' ')
 end

@@ -15,19 +15,21 @@ clc
 %% Initialize S
 addpath(fullfile(pathRepo,'DefaultSettings'))
 
-[S] = initializeSettings('gait1018');
+[S] = initializeSettings('gait1018_cycling');
 
 %% Settings
 
 % name of the subject
-S.subject.name = 'gait1018';
+S.subject.name = 'gait1018_cycling';
 
 % path to folder where you want to store the results of the OCP
 % S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',[S.subject.name '_multifibre'],'tact_sensitivity');
 S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',[S.subject.name]);
 
 % either choose "quasi-random" or give the path to a .mot file you want to use as initial guess
-S.solver.IG_selection = fullfile(S.misc.main_path,'OCP','IK_Guess_Full_GC.mot');
+% TODO: THE INITIAL GUESS WILL LIKELY HAVE TO BE UPDATED TO EITHER A "HOT
+% START" OR "QUASI-RANDOM" CYCLING GUESS.
+S.solver.IG_selection = fullfile(S.misc.main_path,'OCP','IK_Guess_Full_cycling.mot');
 S.solver.IG_selection_gaitCyclePercent = 100;
 % S.solver.IG_selection = 'quasi-random';
 
@@ -62,12 +64,29 @@ osim_path = fullfile(pathRepo,'Subjects',S.subject.name,[S.subject.name '.osim']
 % the same time.
 S.solver.run_as_batch_job = false;
 
+S.misc.task = 'cycling';
 % S.misc.forward_velocity = 4.5;
 
 % S.metabolicE.model = 'MinettiAlexander';
 
 % S.bounds.t_final.lower = 0.01;
-% S.bounds.default_coordinate_bounds = 'Running_Coordinate_Bounds.csv';
+S.bounds.default_coordinate_bounds = 'Running_Coordinate_Bounds.csv';
+S.OpenSimADOptions.verbose_mode = true;
+
+% TODO: ADD DEFAULTS TO DEFAULT SETTING FUNCTION
+S.cycling.rpm = 80;
+S.bounds.FPedal.lower = -500; % N
+S.bounds.FPedal.upper = 500; % N
+% S.cycling.min_crank_omega = -0.1;
+S.cycling.power = 200; % watt
+S.cycling.tol_omega = 1e-2;
+
+S.bounds.t_final.lower = 0.1;
+S.bounds.t_final.upper = (60 / S.cycling.rpm) * 1.2;
+
+S.post_process.load_prev_opti_vars = true;
+S.post_process.rerun = true;
+S.misc.result_filename = 'gait1018_cycling_v19';
 
 
 %% Run predictive simulations

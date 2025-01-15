@@ -63,8 +63,9 @@ end
 
 % cost of transport
 E_sum_GC = trapz(R.time.mesh_GC(1:end-1),R.metabolics.Bhargava2004.Edot_incl_basal);
-R.metabolics.Bhargava2004.COT = E_sum_GC/R.misc.body_mass/R.spatiotemp.dist_trav;
-
+if ~strcmp(S.misc.task, 'cycling')
+    R.metabolics.Bhargava2004.COT = E_sum_GC/R.misc.body_mass/R.spatiotemp.dist_trav;
+end
 %% Minetti & Alexander 1997
 R.metabolics.MinettiAlexander.Edot_gait = zeros(N,NMuscle);
 

@@ -29,9 +29,11 @@ t_mesh = [R.time.mesh_GC(1:end-1),R.time.mesh_GC(1:end-1)+R.time.mesh_GC(end)];
 % Joint angles
 q_opt_GUI_GC_1 = [R.kinematics.Qs];
 q_opt_GUI_GC_2 = q_opt_GUI_GC_1;
-q_opt_GUI_GC_2(:,model_info.ExtFunIO.jointi.base_forward) =...
-    q_opt_GUI_GC_2(:,model_info.ExtFunIO.jointi.base_forward) +...
-    R.spatiotemp.dist_trav;
+if ~strcmp(S.misc.task, 'cycling')
+    q_opt_GUI_GC_2(:,model_info.ExtFunIO.jointi.base_forward) =...
+        q_opt_GUI_GC_2(:,model_info.ExtFunIO.jointi.base_forward) +...
+        R.spatiotemp.dist_trav;
+end
 JointAngle.labels = [{'time'},model_info.ExtFunIO.coord_names.all(:)'];
 
 q_opt_GUI_GC = [t_mesh',[q_opt_GUI_GC_1;q_opt_GUI_GC_2]];
