@@ -23,12 +23,12 @@ addpath(fullfile(pathRepo,'DefaultSettings'))
 S.subject.name = 'DHondt_et_al_2024_3seg';
 
 % path to folder where you want to store the results of the OCP
-S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',['DHondt_et_al_2024_3seg_pennation'], 'gait_2_50', 'QR_guess');
-S.misc.forward_velocity = 2.50;
+S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',['DHondt_et_al_2024_3seg_pennation'], 'scaled_lTs', 'gait_4_50', 'QR_guess');
+S.misc.forward_velocity = 4.50;
 
 % either choose "quasi-random" or give the path to a .mot file you want to use as initial guess
 % S.solver.IG_selection = fullfile(S.misc.main_path,'OCP','IK_Guess_Full_GC.mot');
-% S.solver.IG_selection = fullfile(pathRepoFolder,'PredSimResults',['DHondt_et_al_2024_3seg_pennation'], 'gait_1_50', 'DI_guess','DHondt_et_al_2024_3seg_100_pennation.mot');
+% S.solver.IG_selection = fullfile(pathRepoFolder,'PredSimResults',['DHondt_et_al_2024_3seg_pennation'], 'gait_1_00', 'QR_guess','DHondt_et_al_2024_3seg_100_pennation.mot');
 % S.solver.IG_selection_gaitCyclePercent = 200;
 S.solver.IG_selection = 'quasi-random';
 S.solver.IG_selection_gaitCyclePercent = 100;
@@ -64,7 +64,8 @@ if S.solver.run_as_batch_job
     for i = 1:length(scales.alphao)
         scale_C = {};
         for j = 1:length(scales.muscle_names)
-            scale_C = [scale_C {scales.muscle_names(j), 'alphao', scales.alphao(i), scales.muscle_names(j), 'lMo', scales.lMo(j, i)}];
+            scale_C = [scale_C {scales.muscle_names(j), 'alphao', scales.alphao(i), ...
+                scales.muscle_names(j), 'lTs', scales.lTs(j, i)}];
         end
         S.subject.scale_MT_params =  scale_C;
         [savename] = runPredSim(S, osim_path);        

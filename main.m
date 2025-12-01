@@ -23,7 +23,7 @@ addpath(fullfile(pathRepo,'DefaultSettings'))
 S.subject.name = 'DHondt_et_al_2024_3seg';
 
 % path to folder where you want to store the results of the OCP
-S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',[S.subject.name '_multifibre'],'fibre_shift', 'Run_4_0_ms', 'DI_nearest', 'walk_guess');
+S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',[S.subject.name '_multifibre'],'tact_sensitivity', 'Walk');
 % S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',[S.subject.name '_multifibre'],'fibre_shift','Run1_0_ms_new');
 % S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',[S.subject.name], 'speeds');
 
@@ -33,7 +33,7 @@ S.misc.save_folder  = fullfile(pathRepoFolder,'PredSimResults',[S.subject.name '
 % S.solver.IG_selection = fullfile(S.misc.save_folder, 'DHondt_et_al_2024_3seg_v1.mot');
 
 % S.solver.IG_selection = fullfile(pathRepoFolder,'PredSimResults',[S.subject.name '_multifibre'],'fibre_shift', ...
-%     'Walk_2_0_ms','DI_nearest','DHondt_et_al_2024_3seg_96p_type_I.mot');
+%     'Run_3_5_ms','QR_guess','DHondt_et_al_2024_3seg_56p_type_I.mot');
 % S.solver.IG_selection_gaitCyclePercent = 200;
 S.solver.IG_selection = 'quasi-random';
 S.solver.IG_selection_gaitCyclePercent = 100;
@@ -47,8 +47,8 @@ S.multifibre.beta = 0.6; % deactivation time constants are given by tact * (1 / 
 S.multifibre.smeta = linspace(1.5, 2.5, S.multifibre.NFibre); % most efficient to least
 
 % Set options for parameter shifts
-% fibre_type_shift = 0.775;
-% S.param_shift.slow_to_fast = fibre_type_shift;
+fibre_type_shift = 1.0;
+S.param_shift.slow_to_fast = fibre_type_shift;
 % S.param_shift.fast_to_slow = fibre_type_shift;
 
 % Set cost functional weights
@@ -65,7 +65,7 @@ S.misc.visualize_bounds = false;
 % give the path to the osim model of your subject
 osim_path = fullfile(pathRepo,'Subjects',S.subject.name,[S.subject.name '.osim']);
 
-S.misc.forward_velocity = 4.0;
+S.misc.forward_velocity = 1.33;
 
 % S.metabolicE.model = 'MinettiAlexander';
 
@@ -75,32 +75,32 @@ S.misc.task = 'walking';
 
 % Run simulations as batch jobs, such that multiple simulations can run at
 % the same time.
-S.solver.run_as_batch_job = false;
+S.solver.run_as_batch_job = true;
 
 % Set bounds on stride frequency (from Fukuchi et al. 2017 4.5 m/s [mean +/- SD])
-S.bounds.StrideFreq.lower = 1.306;
-S.bounds.StrideFreq.upper = 1.752;
+% S.bounds.StrideFreq.lower = 1.306;
+% S.bounds.StrideFreq.upper = 1.752;
 
 %% Run predictive simulations
 if S.solver.run_as_batch_job
     % fibre_type_shift = fliplr(linspace(0.1, 1, 5))';
     % fibre_type_shift = [0.775; 0.5500; 0.3250; 0.1000];
-    fibre_type_shift = 1;
+    % fibre_type_shift = 1;
     % n_meshes = [40 50 60 75 100 125];
     % speeds = [0.8 1.33 2.25 3.0 4.5]';
-    % tacts = [0.005 0.015; 0.015 0.025; 0.025 0.035; 0.025 0.045; 0.035 0.055; 0.045 0.065];
+    tacts = [0.005 0.015; 0.015 0.025; 0.025 0.035; 0.025 0.045; 0.035 0.055; 0.045 0.065];
     % vmax = [0.5 0.75 1 1.25 1.5]';
     % vmax = [5 6 7 8 9]';
     % tacts = [0.05 0.015 0.025 0.035 0.045]';
     % tol = [2 3 4 5 6]';
     % w_Edot = [1 100 500 1000 2000]';
-    for i = 1:size(fibre_type_shift, 1)
+    for i = 1:size(tacts, 1)
 
         % S.misc.forward_velocity = speeds(i);
         % S.solver.N_meshes = n_meshes(i);
-        S.param_shift.slow_to_fast = fibre_type_shift(i);
+        % S.param_shift.slow_to_fast = fibre_type_shift(i);
         % S.param_shift.fast_to_slow = fibre_type_shift(i);
-        % S.multifibre.tact_range = tacts(i, :);
+        S.multifibre.tact_range = tacts(i, :);
         % S.multifibre.vMmax_range = [5 10] .* vmax(i);
         % S.misc.custom_vMmax = vmax(i);
         % S.misc.custom_tact = tacts(i);

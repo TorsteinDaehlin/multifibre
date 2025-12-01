@@ -732,9 +732,14 @@ dist_trav_tot = Qs_nsc(model_info.ExtFunIO.jointi.base_forward,end) - ...
 vel_aver_tot = dist_trav_tot/tf;
 opti.subject_to(vel_aver_tot - S.misc.forward_velocity == 0)
 
-% Constrain stride frequency
+% Stride frequency
+% As constraint
 if ~isempty(S.bounds.StrideFreq.lower) && ~isempty(S.bounds.StrideFreq.upper)
-    stride_freq = 1/tf;
+    if strcmp(S.misc.gaitmotion_type,'HalfGaitCycle')
+        stride_freq = 0.5/tf;
+    else
+        stride_freq = 1/tf;
+    end
     opti.subject_to(S.bounds.StrideFreq.lower < stride_freq < S.bounds.StrideFreq.upper);
 end
 
